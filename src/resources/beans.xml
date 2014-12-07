@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+ 
+
+	<bean id="persons" class="com.springtest.impl.PersonsImpl">
+	   <property name="persons">
+	     <list>
+	        <ref bean="person1"/>
+	        <ref bean="person2"/>
+	     </list>
+	   </property>
+	</bean>
+	
+	<bean id="person1" class="com.springtest.impl.PersonImpl">
+	    <property name="firstName" value="First Name 1"/>
+	    <property name="lastName" value="Last Name 1"/>
+	</bean>
+	
+	<bean id="person2" class="com.springtest.impl.PersonImpl">
+	    <property name="firstName" value="First Name 2"/>
+	    <property name="lastName" value="Last Name 2"/>
+	</bean>
+
+	<aop:aspectj-autoproxy />
+	
+	<!-- Aspect -->
+	<bean id="transactionAspect" class="com.springtest.aop.Transaction" />
+	<bean id="loggerAspect" class="com.springtest.aop.Logger" />
+	 
+	<aop:config>
+	 
+	   <aop:aspect id="aspectTransaction" ref="transactionAspect" >
+		 
+		   <!-- @Around -->
+		   <aop:pointcut id="pointCutAround" expression="execution(* com.springtest.impl.PersonsImpl.*(..))" />
+		   <aop:around method="transaction" pointcut-ref="pointCutAround"  />
+		 
+	  </aop:aspect>
+	 
+	   <aop:aspect id="aspectLogger" ref="loggerAspect" >
+	
+	       <!-- @Before -->
+	       <aop:pointcut id="pointCutBefore" expression="execution(* com.springtest.impl.*.*(..))" />
+	       <aop:before method="log" pointcut-ref="pointCutBefore" />
+		 
+	   </aop:aspect>
+	 
+	</aop:config>
+
+</beans>
