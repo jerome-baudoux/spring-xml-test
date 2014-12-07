@@ -17,12 +17,12 @@ public class Transaction {
 	public Object transaction(ProceedingJoinPoint joinPoint) throws Throwable {
 		try {
 			System.out.println("Start transaction");
-			return joinPoint.proceed();
+			Object val = joinPoint.proceed();
+			System.out.println("Commit");
+			return val;
 		} catch(Throwable t) {
 			System.out.println("Rollback");
 			throw t;
-		} finally {
-			System.out.println("Commit");
 		}
 	}
 }
