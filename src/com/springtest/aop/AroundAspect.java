@@ -3,10 +3,10 @@ package com.springtest.aop;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
- * Fake Transaction management
+ * Do stuff around our a method
  * @author Jerome
  */
-public class Transaction {
+public class AroundAspect {
 
 	/**
 	 * manage transaction for each call
@@ -14,14 +14,14 @@ public class Transaction {
 	 * @return
 	 * @throws Throwable
 	 */
-	public Object transaction(ProceedingJoinPoint joinPoint) throws Throwable {
+	public Object method(ProceedingJoinPoint joinPoint) throws Throwable {
 		try {
-			System.out.println("Start transaction");
+			System.out.println("Do something");
 			Object val = joinPoint.proceed();
-			System.out.println("Commit");
+			System.out.println("Do something else");
 			return val;
 		} catch(Throwable t) {
-			System.out.println("Rollback");
+			System.out.println("Do something in case of error");
 			throw t;
 		}
 	}

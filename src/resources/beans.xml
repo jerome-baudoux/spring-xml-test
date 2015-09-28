@@ -3,49 +3,83 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
-        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
  
 
-	<bean id="persons" class="com.springtest.impl.PersonsImpl">
+	<bean id="persons" class="com.springtest.service.PersonsImpl">
 	   <property name="persons">
 	     <list>
 	        <ref bean="person1"/>
 	        <ref bean="person2"/>
 	     </list>
 	   </property>
+	   <property name="personDao" ref="personDao" />
 	</bean>
 	
-	<bean id="person1" class="com.springtest.impl.PersonImpl">
+	<bean id="personDao" class="com.springtest.dao.PersonDaoJdbcImpl">
+	   <property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="person1" class="com.springtest.api.Person">
 	    <property name="firstName" value="First Name 1"/>
 	    <property name="lastName" value="Last Name 1"/>
 	</bean>
 	
-	<bean id="person2" class="com.springtest.impl.PersonImpl">
+	<bean id="person2" class="com.springtest.api.Person">
 	    <property name="firstName" value="First Name 2"/>
 	    <property name="lastName" value="Last Name 2"/>
 	</bean>
+	
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/hibernate"/>
+        <property name="username" value="root"/>
+        <property name="password" value=""/>
+    </bean>
+    
+    
+    <!-- similarly, don't forget the PlatformTransactionManager -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    
 
 	<aop:aspectj-autoproxy />
 	
 	<!-- Aspect -->
-	<bean id="transactionAspect" class="com.springtest.aop.Transaction" />
+	<bean id="aroundAspect" class="com.springtest.aop.AroundAspect" />
 	<bean id="loggerAspect" class="com.springtest.aop.Logger" />
+	
+	<!-- Advice -->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
 	 
 	<aop:config>
+	
+		<aop:pointcut id="serviceOperation"
+                expression="execution(* com.springtest.service.*.*(..))"/>
+
+        <aop:advisor pointcut-ref="serviceOperation" advice-ref="txAdvice"/>
 	 
-	   <aop:aspect id="aspectTransaction" ref="transactionAspect" >
+	   <aop:aspect id="aspectAroundAspect" ref="aroundAspect" >
 		 
 		   <!-- @Around -->
-		   <aop:pointcut id="pointCutAround" expression="execution(* com.springtest.impl.PersonsImpl.*(..))" />
-		   <aop:around method="transaction" pointcut-ref="pointCutAround"  />
+		   <aop:pointcut id="pointCutAround" expression="execution(* com.springtest.service.PersonsImpl.*(..))" />
+		   <aop:around method="method" pointcut-ref="pointCutAround"  />
 		 
 	  </aop:aspect>
 	 
 	   <aop:aspect id="aspectLogger" ref="loggerAspect" >
 	
 	       <!-- @Before -->
-	       <aop:pointcut id="pointCutBefore" expression="execution(* com.springtest.impl.*.*(..))" />
+	       <aop:pointcut id="pointCutBefore" expression="execution(* com.springtest.service.*.*(..))" />
 	       <aop:before method="log" pointcut-ref="pointCutBefore" />
 		 
 	   </aop:aspect>
